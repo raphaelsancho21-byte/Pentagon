@@ -10,6 +10,11 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+-- [[ Visibility Globals ]]
+local UIVisible = true
+local ToggleKey = Enum.KeyCode.RightControl
+local MobileButton = nil
+
 -- [[ Configuration ]]
 local Themes = {
     Dark = {
@@ -130,6 +135,16 @@ function Petagon:ApplyTheme(ThemeName)
     end
 end
 
+function Petagon:ToggleUI()
+    if not self.PetagonGui then return end
+    UIVisible = not UIVisible
+    self.PetagonGui.Main.Visible = UIVisible
+    
+    if MobileButton then
+        MobileButton.Visible = not UIVisible
+    end
+end
+
 function Petagon:CreateWindow(Options)
     Options = Options or {}
     local WindowTitle = Options.Name or "Petagon UI"
@@ -138,8 +153,75 @@ function Petagon:CreateWindow(Options)
     PetagonGui.Name = "Petagon"
     PetagonGui.Parent = CoreGui
     PetagonGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    Petagon.PetagonGui = PetagonGui
 
-    local Main = Instance.new("Frame")
+    -- [[ Global Toggle Listener ]]
+    UserInputService.InputBegan:Connect(function(Input, Processed)
+        if not Processed and Input.UserInputType == Enum.UserInputType.Keyboard then
+            if Input.KeyCode == ToggleKey then
+                Petagon:ToggleUI()
+            end
+        end
+    end)
+
+    -- [[ Mobile Button Helper ]]
+    local function CreateMobileButton()
+        if MobileButton then MobileButton:Destroy() end
+        
+        MobileButton = Instance.new("TextButton")
+        MobileButton.Name = "PetagonMobile"
+        MobileButton.Parent = PetagonGui
+        MobileButton.BackgroundColor3 = CurrentTheme.AccentColor
+        MobileButton.Position = UDim2.new(0, 20, 0.5, -20)
+        MobileButton.Size = UDim2.new(0, 40, 0, 40)
+        MobileButton.Font = Enum.Font.GothamBold
+        MobileButton.Text = "P"
+        MobileButton.TextColor3 = CurrentTheme.TextColor
+        MobileButton.TextSize = 20
+        MobileButton.Visible = not UIVisible
+        GlobalObjects[MobileButton] = "Accent"
+
+        local Corner = Instance.new("UICorner")
+        Corner.CornerRadius = UDim.new(1, 0)
+        Corner.Parent = MobileButton
+        
+        ApplyGradient(MobileButton, CurrentTheme.Gradient)
+        AddStroke(MobileButton, CurrentTheme.TextColor, 2, 0.8)
+
+        -- Make it draggable
+        local Dragging = false
+        local DragStart, StartPos
+        
+        MobileButton.InputBegan:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Dragging = true
+                DragStart = Input.Position
+                StartPos = MobileButton.Position
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(Input)
+            if Dragging and (Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseMovement) then
+                local Delta = Input.Position - DragStart
+                MobileButton.Position = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + Delta.X, StartPos.Y.Scale, StartPos.Y.Offset + Delta.Y)
+            end
+        end)
+
+        UserInputService.InputEnded:Connect(function(Input)
+            if Input.UserInputType == Enum.UserInputType.Touch or Input.UserInputType == Enum.UserInputType.MouseButton1 then
+                Dragging = false
+            end
+        end)
+
+        MobileButton.MouseButton1Click:Connect(function()
+            Petagon:ToggleUI()
+        end)
+    end
+    
+    -- Auto-detect Mobile
+    if UserInputService.TouchEnabled then
+        CreateMobileButton()
+    end
     Main.Name = "Main"
     Main.Parent = PetagonGui
     Main.BackgroundColor3 = CurrentTheme.MainColor
@@ -724,6 +806,88 @@ function Petagon:CreateWindow(Options)
             }
         end
 
+        function Tab:CreateKeybind(ElementOptions)
+            ElementOptions = ElementOptions or {}
+            local Name = ElementOptions.Name or "Keybind"
+            local CurrentKey = ElementOptions.CurrentKey or Enum.KeyCode.F
+            local Callback = ElementOptions.Callback or function() end
+
+            local KeybindFrame = Instance.new("Frame")
+            KeybindFrame.Name = Name .. "Keybind"
+            KeybindFrame.Parent = TabPage
+            KeybindFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
+            KeybindFrame.Size = UDim2.new(1, 0, 0, 38)
+            GlobalObjects[KeybindFrame] = "Secondary"
+
+            local KeybindCorner = Instance.new("UICorner")
+            KeybindCorner.CornerRadius = UDim.new(0, 8)
+            KeybindCorner.Parent = KeybindFrame
+            
+            AddStroke(KeybindFrame, CurrentTheme.AccentColor, 1, 0.6)
+
+            local KeybindLabel = Instance.new("TextLabel")
+            KeybindLabel.Parent = KeybindFrame
+            KeybindLabel.BackgroundTransparency = 1
+            KeybindLabel.Position = UDim2.new(0, 12, 0, 0)
+            KeybindLabel.Size = UDim2.new(1, -100, 1, 0)
+            KeybindLabel.Font = Enum.Font.GothamMedium
+            KeybindLabel.Text = Name
+            KeybindLabel.TextColor3 = CurrentTheme.TextColor
+            KeybindLabel.TextSize = 14
+            KeybindLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[KeybindLabel] = "Text"
+
+            local KeyBox = Instance.new("Frame")
+            KeyBox.Parent = KeybindFrame
+            KeyBox.BackgroundColor3 = CurrentTheme.MainColor
+            KeyBox.Position = UDim2.new(1, -90, 0.5, -12)
+            KeyBox.Size = UDim2.new(0, 80, 0, 24)
+            GlobalObjects[KeyBox] = "Main"
+
+            local KeyCorner = Instance.new("UICorner")
+            KeyCorner.CornerRadius = UDim.new(0, 6)
+            KeyCorner.Parent = KeyBox
+
+            local KeyLabel = Instance.new("TextLabel")
+            KeyLabel.Parent = KeyBox
+            KeyLabel.BackgroundTransparency = 1
+            KeyLabel.Size = UDim2.new(1, 0, 1, 0)
+            KeyLabel.Font = Enum.Font.GothamBold
+            KeyLabel.Text = CurrentKey.Name
+            KeyLabel.TextColor3 = CurrentTheme.AccentColor
+            KeyLabel.TextSize = 12
+            GlobalObjects[KeyLabel] = "Accent"
+
+            local Binding = false
+            local ClickBtn = Instance.new("TextButton")
+            ClickBtn.Parent = KeybindFrame
+            ClickBtn.BackgroundTransparency = 1
+            ClickBtn.Size = UDim2.new(1, 0, 1, 0)
+            ClickBtn.Text = ""
+
+            ClickBtn.MouseButton1Click:Connect(function()
+                Binding = true
+                KeyLabel.Text = "..."
+            end)
+
+            UserInputService.InputBegan:Connect(function(Input)
+                if Binding and Input.UserInputType == Enum.UserInputType.Keyboard then
+                    CurrentKey = Input.KeyCode
+                    KeyLabel.Text = CurrentKey.Name
+                    Binding = false
+                    Callback(CurrentKey)
+                end
+            end)
+
+            return {
+                Set = function(self, NewKey)
+                    CurrentKey = NewKey
+                    KeyLabel.Text = CurrentKey.Name
+                    Callback(CurrentKey)
+                end
+            }
+        end
+
         return Tab
     end
 
@@ -980,6 +1144,28 @@ function Petagon:CreateWindow(Options)
             Callback = function(Value)
                 Petagon:ApplyTheme(Value)
                 Petagon:Notify({Title = "Theme Changed", Content = "Interface updated to " .. Value, Duration = 3})
+            end
+        })
+
+        SettingsTab:CreateKeybind({
+            Name = "UI Toggle Key",
+            CurrentKey = ToggleKey,
+            Callback = function(Key)
+                ToggleKey = Key
+                Petagon:Notify({Title = "Keybind Updated", Content = "New toggle key: " .. Key.Name, Duration = 3})
+            end
+        })
+
+        SettingsTab:CreateToggle({
+            Name = "Mobile Toggle Button",
+            CurrentValue = UserInputService.TouchEnabled,
+            Callback = function(Value)
+                if Value then
+                    CreateMobileButton()
+                elseif MobileButton then
+                    MobileButton:Destroy()
+                    MobileButton = nil
+                end
             end
         })
 
