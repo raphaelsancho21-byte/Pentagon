@@ -357,8 +357,8 @@ function Petagon:CreateWindow(Options)
     TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     TabListLayout.Padding = UDim.new(0, 5)
 
-    TabListLayout:GetPropertyChangedSignal("ContentSize"):Connect(function()
-        TabContainer.CanvasSize = UDim2.new(0, 0, 0, TabListLayout.ContentSize.Y + 10)
+    TabListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        TabContainer.CanvasSize = UDim2.new(0, 0, 0, TabListLayout.AbsoluteContentSize.Y + 10)
     end)
 
     MakeDraggable(TopBar, Main)
@@ -406,8 +406,8 @@ function Petagon:CreateWindow(Options)
         PagePadding.PaddingRight = UDim.new(0, 10)
         PagePadding.PaddingTop = UDim.new(0, 10)
 
-        PageListLayout:GetPropertyChangedSignal("ContentSize"):Connect(function()
-            TabPage.CanvasSize = UDim2.new(0, 0, 0, PageListLayout.ContentSize.Y + 20)
+        PageListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            TabPage.CanvasSize = UDim2.new(0, 0, 0, PageListLayout.AbsoluteContentSize.Y + 20)
         end)
 
         GlobalObjects[TabButton] = "Secondary"
