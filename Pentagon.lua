@@ -151,6 +151,66 @@ function Petagon:CreateWindow(Options)
     PetagonGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Petagon.PetagonGui = PetagonGui
 
+    -- [[ Optional Loading Screen ]]
+    if Options.LoadingTitle then
+        local LoadingFrame = Instance.new("Frame")
+        LoadingFrame.Name = "Loading"
+        LoadingFrame.Parent = PetagonGui
+        LoadingFrame.BackgroundColor3 = CurrentTheme.MainColor
+        LoadingFrame.BorderSizePixel = 0
+        LoadingFrame.Position = UDim2.new(0.5, -150, 0.5, -50)
+        LoadingFrame.Size = UDim2.new(0, 300, 0, 100)
+        LoadingFrame.ClipsDescendants = true
+        
+        local LCorner = Instance.new("UICorner")
+        LCorner.CornerRadius = UDim.new(0, 10)
+        LCorner.Parent = LoadingFrame
+        
+        AddStroke(LoadingFrame, CurrentTheme.AccentColor, 1.5, 0.5)
+        
+        local LTitle = Instance.new("TextLabel")
+        LTitle.Parent = LoadingFrame
+        LTitle.BackgroundTransparency = 1
+        LTitle.Position = UDim2.new(0, 0, 0.2, 0)
+        LTitle.Size = UDim2.new(1, 0, 0, 25)
+        LTitle.Font = Enum.Font.GothamBold
+        LTitle.Text = Options.LoadingTitle
+        LTitle.TextColor3 = CurrentTheme.TextColor
+        LTitle.TextSize = 20
+        
+        local LSub = Instance.new("TextLabel")
+        LSub.Parent = LoadingFrame
+        LSub.BackgroundTransparency = 1
+        LSub.Position = UDim2.new(0, 0, 0.45, 0)
+        LSub.Size = UDim2.new(1, 0, 0, 20)
+        LSub.Font = Enum.Font.Gotham
+        LSub.Text = Options.LoadingSubtitle or "Loading..."
+        LSub.TextColor3 = CurrentTheme.TextSecondaryColor
+        LSub.TextSize = 14
+        
+        local BarBack = Instance.new("Frame")
+        BarBack.Parent = LoadingFrame
+        BarBack.BackgroundColor3 = CurrentTheme.SecondaryColor
+        BarBack.Position = UDim2.new(0.1, 0, 0.75, 0)
+        BarBack.Size = UDim2.new(0.8, 0, 0, 4)
+        
+        local BarFill = Instance.new("Frame")
+        BarFill.Parent = BarBack
+        BarFill.BackgroundColor3 = CurrentTheme.AccentColor
+        BarFill.Size = UDim2.new(0, 0, 1, 0)
+        ApplyGradient(BarFill, CurrentTheme.Gradient)
+        
+        -- Animation
+        task.spawn(function()
+            TweenService:Create(BarFill, TweenInfo.new(2, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+            task.wait(2.2)
+            TweenService:Create(LoadingFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(0, 0, 0, 0), Transparency = 1}):Play()
+            task.wait(0.5)
+            LoadingFrame:Destroy()
+        end)
+        task.wait(2.5) -- Wait for loading to finish
+    end
+
     -- [[ Global Toggle Listener ]]
     UserInputService.InputBegan:Connect(function(Input, Processed)
         if not Processed and Input.UserInputType == Enum.UserInputType.Keyboard then
