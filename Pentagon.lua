@@ -222,6 +222,8 @@ function Petagon:CreateWindow(Options)
     if UserInputService.TouchEnabled then
         CreateMobileButton()
     end
+
+    local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Parent = PetagonGui
     Main.BackgroundColor3 = CurrentTheme.MainColor
