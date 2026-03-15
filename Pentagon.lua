@@ -6,6 +6,31 @@ local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 
+-- [[ Bypass Utilities ]]
+local function GetParent()
+    if gethui then
+        return gethui()
+    elseif syn and syn.protect_gui then
+        return CoreGui
+    else
+        return CoreGui
+    end
+end
+
+local function ProtectGui(gui)
+    if syn and syn.protect_gui then
+        pcall(function() syn.protect_gui(gui) end)
+    end
+end
+
+local function GenerateName()
+    local name = ""
+    for _ = 1, 20 do
+        name = name .. string.char(math.random(97, 122))
+    end
+    return name
+end
+
 -- [[ Variables ]]
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
@@ -146,8 +171,9 @@ function Petagon:CreateWindow(Options)
     local WindowTitle = Options.Name or "Petagon UI"
     
     local PetagonGui = Instance.new("ScreenGui")
-    PetagonGui.Name = "Petagon"
-    PetagonGui.Parent = CoreGui
+    PetagonGui.Name = GenerateName()
+    PetagonGui.Parent = GetParent()
+    ProtectGui(PetagonGui)
     PetagonGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
     Petagon.PetagonGui = PetagonGui
 
@@ -1042,8 +1068,9 @@ function Petagon:CreateWindow(Options)
 
     -- [[ Notifications Fix ]]
     local NotifGui = Instance.new("ScreenGui")
-    NotifGui.Name = "PetagonNotifications"
-    NotifGui.Parent = CoreGui
+    NotifGui.Name = GenerateName()
+    NotifGui.Parent = GetParent()
+    ProtectGui(NotifGui)
     NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
     local NotifContainer = Instance.new("Frame")
