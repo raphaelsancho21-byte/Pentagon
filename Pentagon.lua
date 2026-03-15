@@ -18,6 +18,8 @@ local Themes = {
         AccentColor = Color3.fromRGB(123, 44, 191),
         TextColor = Color3.fromRGB(255, 255, 255),
         TextSecondaryColor = Color3.fromRGB(180, 180, 180),
+        Font = Enum.Font.Gotham,
+        Rounding = 8,
         Gradient = {Color3.fromRGB(123, 44, 191), Color3.fromRGB(60, 20, 100)}
     },
     Light = {
@@ -26,6 +28,8 @@ local Themes = {
         AccentColor = Color3.fromRGB(0, 120, 255),
         TextColor = Color3.fromRGB(30, 30, 35),
         TextSecondaryColor = Color3.fromRGB(100, 100, 110),
+        Font = Enum.Font.Gotham,
+        Rounding = 8,
         Gradient = {Color3.fromRGB(0, 120, 255), Color3.fromRGB(0, 200, 255)}
     },
     Blue = {
@@ -34,6 +38,8 @@ local Themes = {
         AccentColor = Color3.fromRGB(0, 210, 255),
         TextColor = Color3.fromRGB(255, 255, 255),
         TextSecondaryColor = Color3.fromRGB(160, 180, 200),
+        Font = Enum.Font.Gotham,
+        Rounding = 8,
         Gradient = {Color3.fromRGB(0, 180, 255), Color3.fromRGB(0, 100, 200)}
     }
 }
@@ -178,13 +184,14 @@ function Petagon:CreateWindow(Options)
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
     Sidebar.Parent = Main
-    Sidebar.BackgroundColor3 = Theme.SecondaryColor
+    Sidebar.BackgroundColor3 = CurrentTheme.SecondaryColor
     Sidebar.BorderSizePixel = 0
     Sidebar.Position = UDim2.new(0, 0, 0, 40)
     Sidebar.Size = UDim2.new(0, 140, 1, -40)
+    GlobalObjects[Sidebar] = "Secondary"
 
     local SidebarCorner = Instance.new("UICorner")
-    SidebarCorner.CornerRadius = UDim.new(0, Theme.Rounding)
+    SidebarCorner.CornerRadius = UDim.new(0, CurrentTheme.Rounding)
     SidebarCorner.Parent = Sidebar
 
     local Container = Instance.new("Frame")
@@ -219,12 +226,12 @@ function Petagon:CreateWindow(Options)
         local TabButton = Instance.new("TextButton")
         TabButton.Name = Name .. "Tab"
         TabButton.Parent = TabContainer
-        TabButton.BackgroundColor3 = Theme.MainColor
+        TabButton.BackgroundColor3 = CurrentTheme.MainColor
         TabButton.BorderSizePixel = 0
         TabButton.Size = UDim2.new(1, 0, 0, 30)
-        TabButton.Font = Theme.Font
+        TabButton.Font = CurrentTheme.Font
         TabButton.Text = Name
-        TabButton.TextColor3 = Theme.TextSecondaryColor
+        TabButton.TextColor3 = CurrentTheme.TextSecondaryColor
         TabButton.TextSize = 14
         TabButton.AutoButtonColor = false
 
@@ -241,7 +248,7 @@ function Petagon:CreateWindow(Options)
         TabPage.Visible = false
         TabPage.CanvasSize = UDim2.new(0, 0, 0, 0)
         TabPage.ScrollBarThickness = 2
-        TabPage.ScrollBarImageColor3 = Theme.AccentColor
+        TabPage.ScrollBarImageColor3 = CurrentTheme.AccentColor
 
         local PageListLayout = Instance.new("UIListLayout")
         PageListLayout.Parent = TabPage
@@ -829,17 +836,17 @@ function Petagon:CreateWindow(Options)
         local KeyGui = Instance.new("Frame")
         KeyGui.Name = "KeySystem"
         KeyGui.Parent = PetagonGui
-        KeyGui.BackgroundColor3 = Theme.MainColor
+        KeyGui.BackgroundColor3 = CurrentTheme.MainColor
         KeyGui.BorderSizePixel = 0
         KeyGui.Position = UDim2.new(0.5, -150, 0.5, -100)
         KeyGui.Size = UDim2.new(0, 300, 0, 200)
 
         local KeyCorner = Instance.new("UICorner")
-        KeyCorner.CornerRadius = UDim.new(0, Theme.Rounding)
+        KeyCorner.CornerRadius = UDim.new(0, CurrentTheme.Rounding)
         KeyCorner.Parent = KeyGui
 
         local KeyStroke = Instance.new("UIStroke")
-        KeyStroke.Color = Theme.AccentColor
+        KeyStroke.Color = CurrentTheme.AccentColor
         KeyStroke.Thickness = 1.5
         KeyStroke.Parent = KeyGui
 
@@ -848,9 +855,9 @@ function Petagon:CreateWindow(Options)
         KeyTitle.BackgroundTransparency = 1
         KeyTitle.Position = UDim2.new(0, 0, 0, 15)
         KeyTitle.Size = UDim2.new(1, 0, 0, 30)
-        KeyTitle.Font = Theme.Font
+        KeyTitle.Font = CurrentTheme.Font
         KeyTitle.Text = TitleText
-        KeyTitle.TextColor3 = Theme.TextColor
+        KeyTitle.TextColor3 = CurrentTheme.TextColor
         KeyTitle.TextSize = 20
 
         local KeySubtitle = Instance.new("TextLabel")
@@ -858,14 +865,14 @@ function Petagon:CreateWindow(Options)
         KeySubtitle.BackgroundTransparency = 1
         KeySubtitle.Position = UDim2.new(0, 0, 0, 45)
         KeySubtitle.Size = UDim2.new(1, 0, 0, 20)
-        KeySubtitle.Font = Theme.Font
+        KeySubtitle.Font = CurrentTheme.Font
         KeySubtitle.Text = SubtitleText
-        KeySubtitle.TextColor3 = Theme.TextSecondaryColor
+        KeySubtitle.TextColor3 = CurrentTheme.TextSecondaryColor
         KeySubtitle.TextSize = 14
 
         local KeyInputFrame = Instance.new("Frame")
         KeyInputFrame.Parent = KeyGui
-        KeyInputFrame.BackgroundColor3 = Theme.SecondaryColor
+        KeyInputFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
         KeyInputFrame.Position = UDim2.new(0.1, 0, 0.45, 0)
         KeyInputFrame.Size = UDim2.new(0.8, 0, 0, 35)
 
@@ -878,20 +885,20 @@ function Petagon:CreateWindow(Options)
         KeyTextBox.BackgroundTransparency = 1
         KeyTextBox.Position = UDim2.new(0, 10, 0, 0)
         KeyTextBox.Size = UDim2.new(1, -20, 1, 0)
-        KeyTextBox.Font = Theme.Font
+        KeyTextBox.Font = CurrentTheme.Font
         KeyTextBox.PlaceholderText = "Enter key here..."
         KeyTextBox.Text = ""
-        KeyTextBox.TextColor3 = Theme.TextColor
+        KeyTextBox.TextColor3 = CurrentTheme.TextColor
         KeyTextBox.TextSize = 14
 
         local SubmitBtn = Instance.new("TextButton")
         SubmitBtn.Parent = KeyGui
-        SubmitBtn.BackgroundColor3 = Theme.AccentColor
+        SubmitBtn.BackgroundColor3 = CurrentTheme.AccentColor
         SubmitBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
         SubmitBtn.Size = UDim2.new(0.4, -5, 0, 35)
-        SubmitBtn.Font = Theme.Font
+        SubmitBtn.Font = CurrentTheme.Font
         SubmitBtn.Text = "Submit"
-        SubmitBtn.TextColor3 = Theme.TextColor
+        SubmitBtn.TextColor3 = CurrentTheme.TextColor
         SubmitBtn.TextSize = 14
 
         local SubmitCorner = Instance.new("UICorner")
@@ -900,12 +907,12 @@ function Petagon:CreateWindow(Options)
 
         local GetBtn = Instance.new("TextButton")
         GetBtn.Parent = KeyGui
-        GetBtn.BackgroundColor3 = Theme.SecondaryColor
+        GetBtn.BackgroundColor3 = CurrentTheme.SecondaryColor
         GetBtn.Position = UDim2.new(0.5, 5, 0.7, 0)
         GetBtn.Size = UDim2.new(0.4, -5, 0, 35)
-        GetBtn.Font = Theme.Font
+        GetBtn.Font = CurrentTheme.Font
         GetBtn.Text = "Get Key"
-        GetBtn.TextColor3 = Theme.TextColor
+        GetBtn.TextColor3 = CurrentTheme.TextColor
         GetBtn.TextSize = 14
 
         local GetCorner = Instance.new("UICorner")
@@ -917,9 +924,9 @@ function Petagon:CreateWindow(Options)
         Note.BackgroundTransparency = 1
         Note.Position = UDim2.new(0, 0, 0.9, 0)
         Note.Size = UDim2.new(1, 0, 0, 20)
-        Note.Font = Theme.Font
+        Note.Font = CurrentTheme.Font
         Note.Text = NoteText
-        Note.TextColor3 = Theme.TextSecondaryColor
+        Note.TextColor3 = CurrentTheme.TextSecondaryColor
         Note.TextSize = 11
 
         local function Unlock()
