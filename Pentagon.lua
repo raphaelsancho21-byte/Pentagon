@@ -11,17 +11,55 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
 -- [[ Configuration ]]
-local Theme = {
-    MainColor = Color3.fromRGB(10, 11, 16),
-    SecondaryColor = Color3.fromRGB(15, 16, 24),
-    AccentColor = Color3.fromRGB(123, 44, 191),
-    TextColor = Color3.fromRGB(255, 255, 255),
-    TextSecondaryColor = Color3.fromRGB(180, 180, 180),
-    Font = Enum.Font.Gotham,
-    Rounding = 8
+local Themes = {
+    Dark = {
+        MainColor = Color3.fromRGB(15, 16, 22),
+        SecondaryColor = Color3.fromRGB(22, 23, 30),
+        AccentColor = Color3.fromRGB(123, 44, 191),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        TextSecondaryColor = Color3.fromRGB(180, 180, 180),
+        Gradient = {Color3.fromRGB(123, 44, 191), Color3.fromRGB(60, 20, 100)}
+    },
+    Light = {
+        MainColor = Color3.fromRGB(245, 245, 250),
+        SecondaryColor = Color3.fromRGB(230, 230, 235),
+        AccentColor = Color3.fromRGB(0, 120, 255),
+        TextColor = Color3.fromRGB(30, 30, 35),
+        TextSecondaryColor = Color3.fromRGB(100, 100, 110),
+        Gradient = {Color3.fromRGB(0, 120, 255), Color3.fromRGB(0, 200, 255)}
+    },
+    Blue = {
+        MainColor = Color3.fromRGB(10, 20, 35),
+        SecondaryColor = Color3.fromRGB(15, 25, 45),
+        AccentColor = Color3.fromRGB(0, 210, 255),
+        TextColor = Color3.fromRGB(255, 255, 255),
+        TextSecondaryColor = Color3.fromRGB(160, 180, 200),
+        Gradient = {Color3.fromRGB(0, 180, 255), Color3.fromRGB(0, 100, 200)}
+    }
 }
 
+local CurrentTheme = Themes.Dark
+local GlobalObjects = {} -- For dynamic theme updates
+
 -- [[ Utility Functions ]]
+local function ApplyGradient(Parent, Colors)
+    local UIGradient = Instance.new("UIGradient")
+    UIGradient.Color = ColorSequence.new(Colors[1], Colors[2])
+    UIGradient.Rotation = 45
+    UIGradient.Parent = Parent
+    return UIGradient
+end
+
+local function AddStroke(Parent, Color, Thickness, Transparency)
+    local UIStroke = Instance.new("UIStroke")
+    UIStroke.Color = Color
+    UIStroke.Thickness = Thickness or 1
+    UIStroke.Transparency = Transparency or 0.5
+    UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    UIStroke.Parent = Parent
+    return UIStroke
+end
+
 local function MakeDraggable(TopBar, Main)
     local Dragging = nil
     local DragInput = nil
@@ -60,6 +98,32 @@ local function MakeDraggable(TopBar, Main)
     end)
 end
 
+function Petagon:ApplyTheme(ThemeName)
+    if Themes[ThemeName] then
+        CurrentTheme = Themes[ThemeName]
+        for Obj, Type in pairs(GlobalObjects) do
+            if Obj and Obj.Parent then
+                if Type == "Main" then
+                    Obj.BackgroundColor3 = CurrentTheme.MainColor
+                elseif Type == "Secondary" then
+                    Obj.BackgroundColor3 = CurrentTheme.SecondaryColor
+                elseif Type == "Accent" then
+                    Obj.BackgroundColor3 = CurrentTheme.AccentColor
+                    if Obj:FindFirstChild("UIGradient") then
+                        Obj.UIGradient.Color = ColorSequence.new(CurrentTheme.Gradient[1], CurrentTheme.Gradient[2])
+                    end
+                elseif Type == "Text" then
+                    Obj.TextColor3 = CurrentTheme.TextColor
+                elseif Type == "TextSecondary" then
+                    Obj.TextColor3 = CurrentTheme.TextSecondaryColor
+                elseif Type == "Stroke" then
+                    Obj.Color = CurrentTheme.AccentColor
+                end
+            end
+        end
+    end
+end
+
 function Petagon:CreateWindow(Options)
     Options = Options or {}
     local WindowTitle = Options.Name or "Petagon UI"
@@ -72,31 +136,30 @@ function Petagon:CreateWindow(Options)
     local Main = Instance.new("Frame")
     Main.Name = "Main"
     Main.Parent = PetagonGui
-    Main.BackgroundColor3 = Theme.MainColor
+    Main.BackgroundColor3 = CurrentTheme.MainColor
     Main.BorderSizePixel = 0
     Main.ClipsDescendants = true
     Main.Position = UDim2.new(0.5, -250, 0.5, -175)
     Main.Size = UDim2.new(0, 500, 0, 350)
+    GlobalObjects[Main] = "Main"
 
     local UICorner = Instance.new("UICorner")
-    UICorner.CornerRadius = UDim.new(0, Theme.Rounding)
+    UICorner.CornerRadius = UDim.new(0, 10)
     UICorner.Parent = Main
 
-    local UIStroke = Instance.new("UIStroke")
-    UIStroke.Color = Theme.AccentColor
-    UIStroke.Thickness = 1.5
-    UIStroke.Transparency = 0.5
-    UIStroke.Parent = Main
+    local UIStroke = AddStroke(Main, CurrentTheme.AccentColor, 1.5, 0.4)
+    GlobalObjects[UIStroke] = "Stroke"
 
     local TopBar = Instance.new("Frame")
     TopBar.Name = "TopBar"
     TopBar.Parent = Main
-    TopBar.BackgroundColor3 = Theme.SecondaryColor
+    TopBar.BackgroundColor3 = CurrentTheme.SecondaryColor
     TopBar.BorderSizePixel = 0
     TopBar.Size = UDim2.new(1, 0, 0, 40)
+    GlobalObjects[TopBar] = "Secondary"
 
     local TopBarCorner = Instance.new("UICorner")
-    TopBarCorner.CornerRadius = UDim.new(0, Theme.Rounding)
+    TopBarCorner.CornerRadius = UDim.new(0, 10)
     TopBarCorner.Parent = TopBar
 
     local Title = Instance.new("TextLabel")
@@ -105,11 +168,12 @@ function Petagon:CreateWindow(Options)
     Title.BackgroundTransparency = 1
     Title.Position = UDim2.new(0, 15, 0, 0)
     Title.Size = UDim2.new(1, -30, 1, 0)
-    Title.Font = Theme.Font
+    Title.Font = Enum.Font.GothamBold
     Title.Text = WindowTitle
-    Title.TextColor3 = Theme.TextColor
+    Title.TextColor3 = CurrentTheme.TextColor
     Title.TextSize = 16
     Title.TextXAlignment = Enum.TextXAlignment.Left
+    GlobalObjects[Title] = "Text"
 
     local Sidebar = Instance.new("Frame")
     Sidebar.Name = "Sidebar"
@@ -190,23 +254,26 @@ function Petagon:CreateWindow(Options)
         PagePadding.PaddingRight = UDim.new(0, 10)
         PagePadding.PaddingTop = UDim.new(0, 10)
 
+        GlobalObjects[TabButton] = "Secondary"
+        GlobalObjects[TabPage] = "Main"
+
         TabButton.MouseButton1Click:Connect(function()
             if Window.CurrentTab then
-                Window.CurrentTab.Button.TextColor3 = Theme.TextSecondaryColor
-                TweenService:Create(Window.CurrentTab.Button, TweenInfo.new(0.3), {BackgroundColor3 = Theme.MainColor}):Play()
+                Window.CurrentTab.Button.TextColor3 = CurrentTheme.TextSecondaryColor
+                TweenService:Create(Window.CurrentTab.Button, TweenInfo.new(0.3), {BackgroundColor3 = CurrentTheme.MainColor}):Play()
                 Window.CurrentTab.Page.Visible = false
             end
             
-            TabButton.TextColor3 = Theme.TextColor
-            TweenService:Create(TabButton, TweenInfo.new(0.3), {BackgroundColor3 = Theme.AccentColor}):Play()
+            TabButton.TextColor3 = CurrentTheme.TextColor
+            TweenService:Create(TabButton, TweenInfo.new(0.3), {BackgroundColor3 = CurrentTheme.AccentColor}):Play()
             TabPage.Visible = true
             Window.CurrentTab = {Button = TabButton, Page = TabPage}
         end)
 
         -- Select first tab by default
         if not Window.CurrentTab then
-            TabButton.TextColor3 = Theme.TextColor
-            TabButton.BackgroundColor3 = Theme.AccentColor
+            TabButton.TextColor3 = CurrentTheme.TextColor
+            TabButton.BackgroundColor3 = CurrentTheme.AccentColor
             TabPage.Visible = true
             Window.CurrentTab = {Button = TabButton, Page = TabPage}
         end
@@ -221,27 +288,30 @@ function Petagon:CreateWindow(Options)
             local ButtonFrame = Instance.new("Frame")
             ButtonFrame.Name = Name .. "Button"
             ButtonFrame.Parent = TabPage
-            ButtonFrame.BackgroundColor3 = Theme.SecondaryColor
-            ButtonFrame.Size = UDim2.new(1, 0, 0, 35)
+            ButtonFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
+            ButtonFrame.Size = UDim2.new(1, 0, 0, 38)
+            GlobalObjects[ButtonFrame] = "Secondary"
 
             local ButtonCorner = Instance.new("UICorner")
-            ButtonCorner.CornerRadius = UDim.new(0, 6)
+            ButtonCorner.CornerRadius = UDim.new(0, 8)
             ButtonCorner.Parent = ButtonFrame
+            
+            AddStroke(ButtonFrame, CurrentTheme.AccentColor, 1, 0.7)
 
             local TextBtn = Instance.new("TextButton")
             TextBtn.Parent = ButtonFrame
             TextBtn.BackgroundTransparency = 1
             TextBtn.Size = UDim2.new(1, 0, 1, 0)
-            TextBtn.Font = Theme.Font
+            TextBtn.Font = Enum.Font.GothamMedium
             TextBtn.Text = Name
-            TextBtn.TextColor3 = Theme.TextColor
+            TextBtn.TextColor3 = CurrentTheme.TextColor
             TextBtn.TextSize = 14
+            GlobalObjects[TextBtn] = "Text"
 
             TextBtn.MouseButton1Click:Connect(function()
                 Callback()
-                -- Visual feedback
                 local OriginalColor = ButtonFrame.BackgroundColor3
-                TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {BackgroundColor3 = Theme.AccentColor}):Play()
+                TweenService:Create(ButtonFrame, TweenInfo.new(0.1), {BackgroundColor3 = CurrentTheme.AccentColor}):Play()
                 task.wait(0.1)
                 TweenService:Create(ButtonFrame, TweenInfo.new(0.2), {BackgroundColor3 = OriginalColor}):Play()
             end)
@@ -264,30 +334,35 @@ function Petagon:CreateWindow(Options)
             local ToggleFrame = Instance.new("Frame")
             ToggleFrame.Name = Name .. "Toggle"
             ToggleFrame.Parent = TabPage
-            ToggleFrame.BackgroundColor3 = Theme.SecondaryColor
-            ToggleFrame.Size = UDim2.new(1, 0, 0, 35)
+            ToggleFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
+            ToggleFrame.Size = UDim2.new(1, 0, 0, 38)
+            GlobalObjects[ToggleFrame] = "Secondary"
 
             local ToggleCorner = Instance.new("UICorner")
-            ToggleCorner.CornerRadius = UDim.new(0, 6)
+            ToggleCorner.CornerRadius = UDim.new(0, 8)
             ToggleCorner.Parent = ToggleFrame
+            
+            AddStroke(ToggleFrame, CurrentTheme.AccentColor, 1, 0.6)
 
             local ToggleLabel = Instance.new("TextLabel")
             ToggleLabel.Parent = ToggleFrame
             ToggleLabel.BackgroundTransparency = 1
-            ToggleLabel.Position = UDim2.new(0, 10, 0, 0)
+            ToggleLabel.Position = UDim2.new(0, 12, 0, 0)
             ToggleLabel.Size = UDim2.new(1, -60, 1, 0)
-            ToggleLabel.Font = Theme.Font
+            ToggleLabel.Font = Enum.Font.GothamMedium
             ToggleLabel.Text = Name
-            ToggleLabel.TextColor3 = Theme.TextColor
+            ToggleLabel.TextColor3 = CurrentTheme.TextColor
             ToggleLabel.TextSize = 14
             ToggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[ToggleLabel] = "Text"
 
             local Switch = Instance.new("Frame")
             Switch.Name = "Switch"
             Switch.Parent = ToggleFrame
-            Switch.BackgroundColor3 = Toggled and Theme.AccentColor or Theme.MainColor
-            Switch.Position = UDim2.new(1, -45, 0.5, -10)
-            Switch.Size = UDim2.new(0, 35, 0, 20)
+            Switch.BackgroundColor3 = Toggled and CurrentTheme.AccentColor or CurrentTheme.MainColor
+            Switch.Position = UDim2.new(1, -50, 0.5, -11)
+            Switch.Size = UDim2.new(0, 38, 0, 22)
+            GlobalObjects[Switch] = Toggled and "Accent" or "Main"
             
             local SwitchCorner = Instance.new("UICorner")
             SwitchCorner.CornerRadius = UDim.new(1, 0)
@@ -296,9 +371,9 @@ function Petagon:CreateWindow(Options)
             local Circle = Instance.new("Frame")
             Circle.Name = "Circle"
             Circle.Parent = Switch
-            Circle.BackgroundColor3 = Theme.TextColor
-            Circle.Position = Toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-            Circle.Size = UDim2.new(0, 16, 0, 16)
+            Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Circle.Position = Toggled and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+            Circle.Size = UDim2.new(0, 18, 0, 18)
 
             local CircleCorner = Instance.new("UICorner")
             CircleCorner.CornerRadius = UDim.new(1, 0)
@@ -312,11 +387,12 @@ function Petagon:CreateWindow(Options)
 
             ClickBtn.MouseButton1Click:Connect(function()
                 Toggled = not Toggled
-                local TargetPos = Toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-                local TargetColor = Toggled and Theme.AccentColor or Theme.MainColor
+                local TargetPos = Toggled and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+                local TargetColor = Toggled and CurrentTheme.AccentColor or CurrentTheme.MainColor
                 
-                TweenService:Create(Circle, TweenInfo.new(0.2), {Position = TargetPos}):Play()
-                TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = TargetColor}):Play()
+                TweenService:Create(Circle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Position = TargetPos}):Play()
+                TweenService:Create(Switch, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {BackgroundColor3 = TargetColor}):Play()
+                GlobalObjects[Switch] = Toggled and "Accent" or "Main"
                 
                 Callback(Toggled)
             end)
@@ -324,10 +400,11 @@ function Petagon:CreateWindow(Options)
             return {
                 Set = function(self, NewValue)
                     Toggled = NewValue
-                    local TargetPos = Toggled and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
-                    local TargetColor = Toggled and Theme.AccentColor or Theme.MainColor
-                    TweenService:Create(Circle, TweenInfo.new(0.2), {Position = TargetPos}):Play()
-                    TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = TargetColor}):Play()
+                    local TargetPos = Toggled and UDim2.new(1, -20, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+                    local TargetColor = Toggled and CurrentTheme.AccentColor or CurrentTheme.MainColor
+                    TweenService:Create(Circle, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {Position = TargetPos}):Play()
+                    TweenService:Create(Switch, TweenInfo.new(0.25, Enum.EasingStyle.Quint), {BackgroundColor3 = TargetColor}):Play()
+                    GlobalObjects[Switch] = Toggled and "Accent" or "Main"
                     Callback(Toggled)
                 end
             }
@@ -346,47 +423,55 @@ function Petagon:CreateWindow(Options)
             local SliderFrame = Instance.new("Frame")
             SliderFrame.Name = Name .. "Slider"
             SliderFrame.Parent = TabPage
-            SliderFrame.BackgroundColor3 = Theme.SecondaryColor
-            SliderFrame.Size = UDim2.new(1, 0, 0, 45)
+            SliderFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
+            SliderFrame.Size = UDim2.new(1, 0, 0, 48)
+            GlobalObjects[SliderFrame] = "Secondary"
 
             local SliderCorner = Instance.new("UICorner")
-            SliderCorner.CornerRadius = UDim.new(0, 6)
+            SliderCorner.CornerRadius = UDim.new(0, 8)
             SliderCorner.Parent = SliderFrame
+            
+            AddStroke(SliderFrame, CurrentTheme.AccentColor, 1, 0.6)
 
             local SliderLabel = Instance.new("TextLabel")
             SliderLabel.Parent = SliderFrame
             SliderLabel.BackgroundTransparency = 1
-            SliderLabel.Position = UDim2.new(0, 10, 0, 5)
+            SliderLabel.Position = UDim2.new(0, 12, 0, 6)
             SliderLabel.Size = UDim2.new(1, -20, 0, 20)
-            SliderLabel.Font = Theme.Font
+            SliderLabel.Font = Enum.Font.GothamMedium
             SliderLabel.Text = Name
-            SliderLabel.TextColor3 = Theme.TextColor
+            SliderLabel.TextColor3 = CurrentTheme.TextColor
             SliderLabel.TextSize = 14
             SliderLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[SliderLabel] = "Text"
 
             local ValueLabel = Instance.new("TextLabel")
             ValueLabel.Parent = SliderFrame
             ValueLabel.BackgroundTransparency = 1
-            ValueLabel.Position = UDim2.new(0, 10, 0, 5)
+            ValueLabel.Position = UDim2.new(0, 10, 0, 6)
             ValueLabel.Size = UDim2.new(1, -20, 0, 20)
-            ValueLabel.Font = Theme.Font
+            ValueLabel.Font = Enum.Font.Gotham
             ValueLabel.Text = tostring(Value)
-            ValueLabel.TextColor3 = Theme.TextSecondaryColor
+            ValueLabel.TextColor3 = CurrentTheme.TextSecondaryColor
             ValueLabel.TextSize = 12
             ValueLabel.TextXAlignment = Enum.TextXAlignment.Right
+            GlobalObjects[ValueLabel] = "TextSecondary"
 
             local Track = Instance.new("Frame")
             Track.Name = "Track"
             Track.Parent = SliderFrame
-            Track.BackgroundColor3 = Theme.MainColor
-            Track.Position = UDim2.new(0, 10, 1, -12)
-            Track.Size = UDim2.new(1, -20, 0, 4)
+            Track.BackgroundColor3 = CurrentTheme.MainColor
+            Track.Position = UDim2.new(0, 12, 1, -14)
+            Track.Size = UDim2.new(1, -24, 0, 4)
+            GlobalObjects[Track] = "Main"
 
             local Progress = Instance.new("Frame")
             Progress.Name = "Progress"
             Progress.Parent = Track
-            Progress.BackgroundColor3 = Theme.AccentColor
+            Progress.BackgroundColor3 = CurrentTheme.AccentColor
             Progress.Size = UDim2.new((Value - Min) / (Max - Min), 0, 1, 0)
+            GlobalObjects[Progress] = "Accent"
+            ApplyGradient(Progress, CurrentTheme.Gradient)
 
             local SliderBtn = Instance.new("TextButton")
             SliderBtn.Parent = Track
@@ -445,46 +530,52 @@ function Petagon:CreateWindow(Options)
             local InputFrame = Instance.new("Frame")
             InputFrame.Name = Name .. "Input"
             InputFrame.Parent = TabPage
-            InputFrame.BackgroundColor3 = Theme.SecondaryColor
-            InputFrame.Size = UDim2.new(1, 0, 0, 35)
+            InputFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
+            InputFrame.Size = UDim2.new(1, 0, 0, 38)
+            GlobalObjects[InputFrame] = "Secondary"
 
             local InputCorner = Instance.new("UICorner")
-            InputCorner.CornerRadius = UDim.new(0, 6)
+            InputCorner.CornerRadius = UDim.new(0, 8)
             InputCorner.Parent = InputFrame
+            
+            AddStroke(InputFrame, CurrentTheme.AccentColor, 1, 0.6)
 
             local InputLabel = Instance.new("TextLabel")
             InputLabel.Parent = InputFrame
             InputLabel.BackgroundTransparency = 1
-            InputLabel.Position = UDim2.new(0, 10, 0, 0)
+            InputLabel.Position = UDim2.new(0, 12, 0, 0)
             InputLabel.Size = UDim2.new(0.4, -10, 1, 0)
-            InputLabel.Font = Theme.Font
+            InputLabel.Font = Enum.Font.GothamMedium
             InputLabel.Text = Name
-            InputLabel.TextColor3 = Theme.TextColor
+            InputLabel.TextColor3 = CurrentTheme.TextColor
             InputLabel.TextSize = 14
             InputLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[InputLabel] = "Text"
 
             local BoxHolder = Instance.new("Frame")
             BoxHolder.Parent = InputFrame
-            BoxHolder.BackgroundColor3 = Theme.MainColor
-            BoxHolder.Position = UDim2.new(0.4, 0, 0.5, -12)
-            BoxHolder.Size = UDim2.new(0.6, -10, 0, 24)
+            BoxHolder.BackgroundColor3 = CurrentTheme.MainColor
+            BoxHolder.Position = UDim2.new(0.42, 0, 0.5, -13)
+            BoxHolder.Size = UDim2.new(0.58, -12, 0, 26)
+            GlobalObjects[BoxHolder] = "Main"
             
             local BoxCorner = Instance.new("UICorner")
-            BoxCorner.CornerRadius = UDim.new(0, 4)
+            BoxCorner.CornerRadius = UDim.new(0, 6)
             BoxCorner.Parent = BoxHolder
 
             local TextBox = Instance.new("TextBox")
             TextBox.Parent = BoxHolder
             TextBox.BackgroundTransparency = 1
-            TextBox.Position = UDim2.new(0, 5, 0, 0)
-            TextBox.Size = UDim2.new(1, -10, 1, 0)
-            TextBox.Font = Theme.Font
+            TextBox.Position = UDim2.new(0, 8, 0, 0)
+            TextBox.Size = UDim2.new(1, -16, 1, 0)
+            TextBox.Font = Enum.Font.Gotham
             TextBox.PlaceholderText = Placeholder
             TextBox.Text = ""
-            TextBox.TextColor3 = Theme.TextColor
-            TextBox.PlaceholderColor3 = Theme.TextSecondaryColor
+            TextBox.TextColor3 = CurrentTheme.TextColor
+            TextBox.PlaceholderColor3 = CurrentTheme.TextSecondaryColor
             TextBox.TextSize = 12
             TextBox.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[TextBox] = "Text"
 
             TextBox.FocusLost:Connect(function(EnterPressed)
                 Callback(TextBox.Text)
@@ -508,65 +599,71 @@ function Petagon:CreateWindow(Options)
             local DropdownFrame = Instance.new("Frame")
             DropdownFrame.Name = Name .. "Dropdown"
             DropdownFrame.Parent = TabPage
-            DropdownFrame.BackgroundColor3 = Theme.SecondaryColor
-            DropdownFrame.Size = UDim2.new(1, 0, 0, 35)
+            DropdownFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
+            DropdownFrame.Size = UDim2.new(1, 0, 0, 38)
             DropdownFrame.ClipsDescendants = true
+            GlobalObjects[DropdownFrame] = "Secondary"
 
             local DropdownCorner = Instance.new("UICorner")
-            DropdownCorner.CornerRadius = UDim.new(0, 6)
+            DropdownCorner.CornerRadius = UDim.new(0, 8)
             DropdownCorner.Parent = DropdownFrame
+            
+            AddStroke(DropdownFrame, CurrentTheme.AccentColor, 1, 0.6)
 
             local DropdownLabel = Instance.new("TextLabel")
             DropdownLabel.Parent = DropdownFrame
             DropdownLabel.BackgroundTransparency = 1
-            DropdownLabel.Position = UDim2.new(0, 10, 0, 0)
-            DropdownLabel.Size = UDim2.new(1, -30, 0, 35)
-            DropdownLabel.Font = Theme.Font
+            DropdownLabel.Position = UDim2.new(0, 12, 0, 0)
+            DropdownLabel.Size = UDim2.new(1, -30, 0, 38)
+            DropdownLabel.Font = Enum.Font.GothamMedium
             DropdownLabel.Text = Name .. " : " .. (Default ~= "" and Default or "None")
-            DropdownLabel.TextColor3 = Theme.TextColor
+            DropdownLabel.TextColor3 = CurrentTheme.TextColor
             DropdownLabel.TextSize = 14
             DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[DropdownLabel] = "Text"
 
             local Arrow = Instance.new("TextLabel")
             Arrow.Parent = DropdownFrame
             Arrow.BackgroundTransparency = 1
-            Arrow.Position = UDim2.new(1, -25, 0, 0)
-            Arrow.Size = UDim2.new(0, 20, 0, 35)
-            Arrow.Font = Theme.Font
+            Arrow.Position = UDim2.new(1, -30, 0, 0)
+            Arrow.Size = UDim2.new(0, 20, 0, 38)
+            Arrow.Font = Enum.Font.GothamBold
             Arrow.Text = ">"
-            Arrow.TextColor3 = Theme.TextColor
+            Arrow.TextColor3 = CurrentTheme.TextColor
             Arrow.TextSize = 14
             Arrow.Rotation = 90
+            GlobalObjects[Arrow] = "Text"
 
             local OptionsContainer = Instance.new("Frame")
             OptionsContainer.Parent = DropdownFrame
             OptionsContainer.BackgroundTransparency = 1
-            OptionsContainer.Position = UDim2.new(0, 5, 0, 35)
-            OptionsContainer.Size = UDim2.new(1, -10, 0, 0)
+            OptionsContainer.Position = UDim2.new(0, 8, 0, 38)
+            OptionsContainer.Size = UDim2.new(1, -16, 0, 0)
             
             local OptionsList = Instance.new("UIListLayout")
             OptionsList.Parent = OptionsContainer
-            OptionsList.Padding = UDim.new(0, 3)
+            OptionsList.Padding = UDim.new(0, 4)
 
             local Toggled = false
             local function UpdateDropdown()
-                local TargetHeight = Toggled and (35 + (#Options * 25) + 5) or 35
-                TweenService:Create(DropdownFrame, TweenInfo.new(0.3), {Size = UDim2.new(1, 0, 0, TargetHeight)}):Play()
-                TweenService:Create(Arrow, TweenInfo.new(0.3), {Rotation = Toggled and 270 or 90}):Play()
+                local TargetHeight = Toggled and (38 + (#Options * 28) + 8) or 38
+                TweenService:Create(DropdownFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, TargetHeight)}):Play()
+                TweenService:Create(Arrow, TweenInfo.new(0.4, Enum.EasingStyle.Quint), {Rotation = Toggled and 270 or 90}):Play()
             end
 
             for _, Option in ipairs(Options) do
                 local OptionBtn = Instance.new("TextButton")
                 OptionBtn.Parent = OptionsContainer
-                OptionBtn.BackgroundColor3 = Theme.MainColor
-                OptionBtn.Size = UDim2.new(1, 0, 0, 22)
-                OptionBtn.Font = Theme.Font
+                OptionBtn.BackgroundColor3 = CurrentTheme.MainColor
+                OptionBtn.Size = UDim2.new(1, 0, 0, 24)
+                OptionBtn.Font = Enum.Font.Gotham
                 OptionBtn.Text = Option
-                OptionBtn.TextColor3 = Theme.TextSecondaryColor
-                OptionBtn.TextSize = 12
+                OptionBtn.TextColor3 = CurrentTheme.TextSecondaryColor
+                OptionBtn.TextSize = 13
+                GlobalObjects[OptionBtn] = "Main"
                 
                 local OptionCorner = Instance.new("UICorner")
-                OptionCorner.CornerRadius = UDim.new(0, 4)
+                OptionCorner.CornerRadius = UDim.new(0, 6)
                 OptionCorner.Parent = OptionBtn
 
                 OptionBtn.MouseButton1Click:Connect(function()
@@ -580,7 +677,7 @@ function Petagon:CreateWindow(Options)
             local ClickBtn = Instance.new("TextButton")
             ClickBtn.Parent = DropdownFrame
             ClickBtn.BackgroundTransparency = 1
-            ClickBtn.Size = UDim2.new(1, 0, 0, 35)
+            ClickBtn.Size = UDim2.new(1, 0, 0, 38)
             ClickBtn.Text = ""
 
             ClickBtn.MouseButton1Click:Connect(function()
@@ -597,15 +694,16 @@ function Petagon:CreateWindow(Options)
                     for _, Option in ipairs(Options) do
                         local OptionBtn = Instance.new("TextButton")
                         OptionBtn.Parent = OptionsContainer
-                        OptionBtn.BackgroundColor3 = Theme.MainColor
-                        OptionBtn.Size = UDim2.new(1, 0, 0, 22)
-                        OptionBtn.Font = Theme.Font
+                        OptionBtn.BackgroundColor3 = CurrentTheme.MainColor
+                        OptionBtn.Size = UDim2.new(1, 0, 0, 24)
+                        OptionBtn.Font = Enum.Font.Gotham
                         OptionBtn.Text = Option
-                        OptionBtn.TextColor3 = Theme.TextSecondaryColor
-                        OptionBtn.TextSize = 12
+                        OptionBtn.TextColor3 = CurrentTheme.TextSecondaryColor
+                        OptionBtn.TextSize = 13
+                        GlobalObjects[OptionBtn] = "Main"
                         
                         local OptionCorner = Instance.new("UICorner")
-                        OptionCorner.CornerRadius = UDim.new(0, 4)
+                        OptionCorner.CornerRadius = UDim.new(0, 6)
                         OptionCorner.Parent = OptionBtn
 
                         OptionBtn.MouseButton1Click:Connect(function()
@@ -622,69 +720,73 @@ function Petagon:CreateWindow(Options)
         return Tab
     end
 
-    -- [[ Notifications ]]
+    -- [[ Notifications Fix ]]
+    local NotifGui = Instance.new("ScreenGui")
+    NotifGui.Name = "PetagonNotifications"
+    NotifGui.Parent = CoreGui
+    NotifGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
+
     local NotifContainer = Instance.new("Frame")
     NotifContainer.Name = "NotifContainer"
-    NotifContainer.Parent = PetagonGui
+    NotifContainer.Parent = NotifGui
     NotifContainer.BackgroundTransparency = 1
-    NotifContainer.Position = UDim2.new(1, -220, 1, -20)
-    NotifContainer.Size = UDim2.new(0, 200, 1, -20)
+    NotifContainer.Position = UDim2.new(1, -280, 0, 20)
+    NotifContainer.Size = UDim2.new(0, 260, 1, -40)
 
     local NotifList = Instance.new("UIListLayout")
     NotifList.Parent = NotifContainer
-    NotifList.VerticalAlignment = Enum.VerticalAlignment.Bottom
-    NotifList.Padding = UDim.new(0, 10)
+    NotifList.VerticalAlignment = Enum.VerticalAlignment.Top
+    NotifList.Padding = UDim.new(0, 8)
 
     function Petagon:Notify(NotifOptions)
         NotifOptions = NotifOptions or {}
         local TitleText = NotifOptions.Title or "Notification"
-        local ContentText = NotifOptions.Content or "Check this out!"
+        local ContentText = NotifOptions.Content or "Message here"
         local Duration = NotifOptions.Duration or 5
 
         local NotifFrame = Instance.new("Frame")
         NotifFrame.Name = "Notification"
         NotifFrame.Parent = NotifContainer
-        NotifFrame.BackgroundColor3 = Theme.MainColor
-        NotifFrame.Size = UDim2.new(1, 0, 0, 60)
-        NotifFrame.Position = UDim2.new(1, 20, 0, 0)
+        NotifFrame.BackgroundColor3 = CurrentTheme.MainColor
+        NotifFrame.Size = UDim2.new(1, 0, 0, 0)
+        NotifFrame.ClipsDescendants = true
+        NotifFrame.Transparency = 1
         
         local NotifCorner = Instance.new("UICorner")
-        NotifCorner.CornerRadius = UDim.new(0, 6)
+        NotifCorner.CornerRadius = UDim.new(0, 8)
         NotifCorner.Parent = NotifFrame
 
-        local NotifStroke = Instance.new("UIStroke")
-        NotifStroke.Color = Theme.AccentColor
-        NotifStroke.Thickness = 1
-        NotifStroke.Parent = NotifFrame
+        local NotifStroke = AddStroke(NotifFrame, CurrentTheme.AccentColor, 1.2, 0.4)
 
         local NotifTitle = Instance.new("TextLabel")
         NotifTitle.Parent = NotifFrame
         NotifTitle.BackgroundTransparency = 1
-        NotifTitle.Position = UDim2.new(0, 10, 0, 5)
-        NotifTitle.Size = UDim2.new(1, -20, 0, 20)
-        NotifTitle.Font = Theme.Font
+        NotifTitle.Position = UDim2.new(0, 12, 0, 8)
+        NotifTitle.Size = UDim2.new(1, -24, 0, 20)
+        NotifTitle.Font = Enum.Font.GothamBold
         NotifTitle.Text = TitleText
-        NotifTitle.TextColor3 = Theme.AccentColor
+        NotifTitle.TextColor3 = CurrentTheme.AccentColor
         NotifTitle.TextSize = 14
         NotifTitle.TextXAlignment = Enum.TextXAlignment.Left
 
         local NotifContent = Instance.new("TextLabel")
         NotifContent.Parent = NotifFrame
         NotifContent.BackgroundTransparency = 1
-        NotifContent.Position = UDim2.new(0, 10, 0, 25)
-        NotifContent.Size = UDim2.new(1, -20, 0, 30)
-        NotifContent.Font = Theme.Font
+        NotifContent.Position = UDim2.new(0, 12, 0, 28)
+        NotifContent.Size = UDim2.new(1, -24, 0, 30)
+        NotifContent.Font = Enum.Font.Gotham
         NotifContent.Text = ContentText
-        NotifContent.TextColor3 = Theme.TextColor
+        NotifContent.TextColor3 = CurrentTheme.TextColor
         NotifContent.TextSize = 12
         NotifContent.TextXAlignment = Enum.TextXAlignment.Left
         NotifContent.TextWrapped = true
 
-        TweenService:Create(NotifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+        -- Animation logic
+        TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, 65), Transparency = 0}):Play()
         
         task.delay(Duration, function()
-            TweenService:Create(NotifFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {Position = UDim2.new(1.2, 0, 0, 0)}):Play()
-            task.wait(0.4)
+            TweenService:Create(NotifFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {Size = UDim2.new(1, 0, 0, 0), Transparency = 1}):Play()
+            task.wait(0.5)
             NotifFrame:Destroy()
         end)
     end
@@ -864,6 +966,16 @@ function Petagon:CreateWindow(Options)
     function Window:CreateSettingsTab()
         local SettingsTab = Window:CreateTab("Configs")
         
+        SettingsTab:CreateDropdown({
+            Name = "UI Theme",
+            Options = {"Dark", "Light", "Blue"},
+            Default = "Dark",
+            Callback = function(Value)
+                Petagon:ApplyTheme(Value)
+                Petagon:Notify({Title = "Theme Changed", Content = "Interface updated to " .. Value, Duration = 3})
+            end
+        })
+
         SettingsTab:CreateButton({
             Name = "Save Configuration",
             Callback = function()
@@ -871,22 +983,21 @@ function Petagon:CreateWindow(Options)
             end
         })
 
-        SettingsTab:CreateToggle({
-            Name = "Always Open (Auto-fill Key)",
-            CurrentValue = true,
-            Callback = function(Value)
-                print("Key Saving:", Value)
-            end
-        })
-
         SettingsTab:CreateButton({
             Name = "Destroy UI",
             Callback = function()
                 PetagonGui:Destroy()
+                NotifGui:Destroy()
             end
         })
 
         return SettingsTab
+    end
+
+    -- Update Tab logic for theme reactivity
+    local function UpdateTabColors(TabBtn, Page)
+        GlobalObjects[TabBtn] = "Secondary"
+        GlobalObjects[Page] = "Main"
     end
 
     return Window
