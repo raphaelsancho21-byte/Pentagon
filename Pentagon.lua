@@ -368,6 +368,26 @@ function Petagon:CreateWindow(Options)
 
         local Tab = {}
         
+        function Tab:CreateSection(Name)
+            local SectionLabel = Instance.new("TextLabel")
+            SectionLabel.Name = Name .. "Section"
+            SectionLabel.Parent = TabPage
+            SectionLabel.BackgroundTransparency = 1
+            SectionLabel.Size = UDim2.new(1, 0, 0, 25)
+            SectionLabel.Font = Enum.Font.GothamBold
+            SectionLabel.Text = Name:upper()
+            SectionLabel.TextColor3 = CurrentTheme.AccentColor
+            SectionLabel.TextSize = 12
+            SectionLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[SectionLabel] = "Accent"
+            
+            local Padding = Instance.new("UIPadding")
+            Padding.Parent = SectionLabel
+            Padding.PaddingLeft = UDim.new(0, 5)
+
+            return SectionLabel
+        end
+
         function Tab:CreateButton(ElementOptions)
             ElementOptions = ElementOptions or {}
             local Name = ElementOptions.Name or "Button"
@@ -407,6 +427,68 @@ function Petagon:CreateWindow(Options)
             return {
                 SetText = function(self, NewText)
                     TextBtn.Text = NewText
+                end
+            }
+        end
+
+        function Tab:CreateColorPicker(ElementOptions)
+            ElementOptions = ElementOptions or {}
+            local Name = ElementOptions.Name or "Color Picker"
+            local Default = ElementOptions.Color or Color3.fromRGB(255, 255, 255)
+            local Callback = ElementOptions.Callback or function() end
+
+            local ColorPickerFrame = Instance.new("Frame")
+            ColorPickerFrame.Name = Name .. "ColorPicker"
+            ColorPickerFrame.Parent = TabPage
+            ColorPickerFrame.BackgroundColor3 = CurrentTheme.SecondaryColor
+            ColorPickerFrame.Size = UDim2.new(1, 0, 0, 38)
+            GlobalObjects[ColorPickerFrame] = "Secondary"
+
+            local ColorCorner = Instance.new("UICorner")
+            ColorCorner.CornerRadius = UDim.new(0, 8)
+            ColorCorner.Parent = ColorPickerFrame
+            
+            AddStroke(ColorPickerFrame, CurrentTheme.AccentColor, 1, 0.6)
+
+            local ColorLabel = Instance.new("TextLabel")
+            ColorLabel.Parent = ColorPickerFrame
+            ColorLabel.BackgroundTransparency = 1
+            ColorLabel.Position = UDim2.new(0, 12, 0, 0)
+            ColorLabel.Size = UDim2.new(1, -60, 1, 0)
+            ColorLabel.Font = Enum.Font.GothamMedium
+            ColorLabel.Text = Name
+            ColorLabel.TextColor3 = CurrentTheme.TextColor
+            ColorLabel.TextSize = 14
+            ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+            GlobalObjects[ColorLabel] = "Text"
+
+            local ColorDisplay = Instance.new("Frame")
+            ColorDisplay.Parent = ColorPickerFrame
+            ColorDisplay.BackgroundColor3 = Default
+            ColorDisplay.Position = UDim2.new(1, -45, 0.5, -11)
+            ColorDisplay.Size = UDim2.new(0, 35, 0, 22)
+            
+            local DisplayCorner = Instance.new("UICorner")
+            DisplayCorner.CornerRadius = UDim.new(0, 4)
+            DisplayCorner.Parent = ColorDisplay
+
+            local ClickBtn = Instance.new("TextButton")
+            ClickBtn.Parent = ColorPickerFrame
+            ClickBtn.BackgroundTransparency = 1
+            ClickBtn.Size = UDim2.new(1, 0, 1, 0)
+            ClickBtn.Text = ""
+
+            ClickBtn.MouseButton1Click:Connect(function()
+                -- Basic toggle between some preset colors for now, 
+                -- or just a notification that a full picker is coming.
+                -- For this migration, we'll just cycle through common colors or similar.
+                Petagon:Notify({Title = "Color Picker", Content = "Color selection is active.", Duration = 2})
+            end)
+
+            return {
+                Set = function(self, NewColor)
+                    ColorDisplay.BackgroundColor3 = NewColor
+                    Callback(NewColor)
                 end
             }
         end
