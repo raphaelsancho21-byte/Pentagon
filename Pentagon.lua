@@ -139,10 +139,6 @@ function Petagon:ToggleUI()
     if not self.PetagonGui then return end
     UIVisible = not UIVisible
     self.PetagonGui.Main.Visible = UIVisible
-    
-    if MobileButton then
-        MobileButton.Visible = not UIVisible
-    end
 end
 
 function Petagon:CreateWindow(Options)
@@ -178,7 +174,8 @@ function Petagon:CreateWindow(Options)
         MobileButton.Text = "P"
         MobileButton.TextColor3 = CurrentTheme.TextColor
         MobileButton.TextSize = 20
-        MobileButton.Visible = not UIVisible
+        MobileButton.Visible = true
+        MobileButton.ZIndex = 10
         GlobalObjects[MobileButton] = "Accent"
 
         local Corner = Instance.new("UICorner")
