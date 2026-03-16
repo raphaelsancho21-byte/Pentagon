@@ -6,9 +6,9 @@ local Petagon = loadstring(game:HttpGet("https://raw.githubusercontent.com/rapha
 -- basta copiar o conteúdo do arquivo Petagon.lua e colar aqui no topo deste script!
 
 local Window = Petagon:CreateWindow({
-    Name = "Petagon Premium | Script Hub",
+    Name = "Petagon ShwoCase",
     LoadingTitle = "Petagon UI",
-    LoadingSubtitle = "by Antigravity"
+    LoadingSubtitle = "by Eyes Group"
 })
 
 -- [[ Key System ]]
