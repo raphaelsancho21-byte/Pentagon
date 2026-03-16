@@ -12,10 +12,11 @@ local Window = Petagon:CreateWindow({
 })
 
 -- [[ Key System ]]
+-- Note: Authentication now saves as .json and includes a Username for config separation.
 Window:CreateKeySystem({
     Key = {"petagon2024"},
     Title = "Access Control",
-    Subtitle = "Enter your secret key",
+    Subtitle = "Enter your secret key & profile",
     Note = "Check our Discord for keys!",
     FileName = "Petagon_Auth",
     SaveKey = true
