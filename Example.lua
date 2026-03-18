@@ -3,12 +3,17 @@
 local Petagon = loadstring(game:HttpGet("https://raw.githubusercontent.com/raphaelsancho21-byte/Pentagon/refs/heads/main/Pentagon.lua"))()
 
 -- DICA: Se quiser testar SEM usar o GitHub (sem loadstring), 
--- basta copiar o conteúdo do arquivo Petagon.lua e colar aqui no topo deste script!
+-- basta copiar o conteúdo do arquivo Petagon.lua e colar aqui no topo deste script! [SOMENTE DEVS TEM ACESSO AO CONDIGO FONTE.]
 
 local Window = Petagon:CreateWindow({
-    Name = "Petagon ShwoCase",
+    Name = "Petagon ShowCase",
     LoadingTitle = "Petagon UI",
-    LoadingSubtitle = "by Eyes Group"
+    LoadingSubtitle = "by Eyes Group",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = "Petagon",
+        FileName = "ShowcaseConfig"
+    }
 })
 
 -- [[ Key System ]]
